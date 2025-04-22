@@ -2,19 +2,19 @@
 
 namespace SmartCms\Compare\Events;
 
-use SmartCms\Compare\Services\CompareService;
-use SmartCms\Core\Components\Pages\PageComponent;
+use SmartCms\Compare\CompareResource;
+use SmartCms\Core\Models\Page;
 
 class PageView
 {
-    public function __invoke(PageComponent $component)
+    public function __invoke(mixed &$resource, Page $page)
     {
-        $layout = $component->layout;
+        $layout = $page?->layout;
         if (! $layout) {
             return;
         }
-        if ($layout->path == 'compare/compare') {
-            $component->dto = CompareService::make();
+        if (str_contains($layout->path, 'compare.')) {
+            $resource = CompareResource::make($page)->get();
         }
     }
 }

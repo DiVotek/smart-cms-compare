@@ -14,44 +14,25 @@ class Install extends Command
 
     public function handle()
     {
-        $this->createLayout('compare');
-        $page = $this->createPage('Compare', 'compare', 'compare');
+        $this->call('make:layout', [
+            'name' => 'compare.default',
+        ]);
+        $layout = Layout::query()->where('path', 'compare.default')->first();
+        if (!$layout) {
+            $this->error('Layout compare.default not found');
+            return;
+        }
+        $page = Page::query()->updateOrCreate(
+            ['slug' => 'compare'],
+            [
+                'name' => 'Compare',
+                'layout_id' => $layout->id,
+            ]
+        );
         setting([
-            'pages.compare' => $page,
+            'pages.compare' => $page->id,
         ]);
         $this->call('optimize:clear');
         $this->info('Installed Smart CMS compare module');
-    }
-
-    public function createLayout(string $name)
-    {
-        $this->call('make:layout', [
-            'name' => $name,
-        ]);
-        Layout::query()->updateOrCreate(
-            [
-                'path' => $name . '/' . $name,
-            ],
-            [
-                'name' => ucfirst($name),
-                'template' => template(),
-                'status' => 1,
-                'schema' => [],
-                'value' => [],
-            ]
-        );
-    }
-
-    public function createPage(string $name, string $slug, string $layout): int
-    {
-        $page = Page::query()->updateOrCreate(
-            ['slug' => $slug],
-            [
-                'name' => $name,
-                'layout' => Layout::query()->where('path', $layout . '/' . $layout)->first()->id,
-            ]
-        );
-
-        return $page->id;
     }
 }
